@@ -1,0 +1,6 @@
+.idea
+venv
+*.zip
+*.pdf
+collect_submission.sh
+**/__pycache__/**

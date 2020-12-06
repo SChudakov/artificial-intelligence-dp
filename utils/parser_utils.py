@@ -3,8 +3,8 @@ import time
 import os
 import logging
 from collections import Counter
-from .general_utils import get_minibatches
-from parser_transitions import minibatch_parse
+from .general_utils import get_mini_batches
+from parser_transitions import mini_batch_parse
 
 from tqdm import tqdm
 import torch
@@ -90,13 +90,13 @@ class Parser(object):
     def vectorize(self, examples):
         vec_examples = []
         for ex in examples:
-            word = [self.ROOT] + [self.tok2id[w] if w in self.tok2id
-                                  else self.UNK for w in ex['word']]
-            pos = [self.P_ROOT] + [self.tok2id[P_PREFIX + w] if P_PREFIX + w in self.tok2id
-                                   else self.P_UNK for w in ex['pos']]
+            word = [self.ROOT] + [self.tok2id[w] if w in self.tok2id else self.UNK
+                                  for w in ex['word']]
+            pos = [self.P_ROOT] + [self.tok2id[P_PREFIX + w] if P_PREFIX + w in self.tok2id else self.P_UNK
+                                   for w in ex['pos']]
             head = [-1] + ex['head']
-            label = [-1] + [self.tok2id[L_PREFIX + w] if L_PREFIX + w in self.tok2id
-                            else -1 for w in ex['label']]
+            label = [-1] + [self.tok2id[L_PREFIX + w] if L_PREFIX + w in self.tok2id else -1
+                            for w in ex['label']]
             vec_examples.append({'word': word, 'pos': pos,
                                  'head': head, 'label': label})
         return vec_examples
@@ -239,7 +239,7 @@ class Parser(object):
             sentence_id_to_idx[id(sentence)] = i
 
         model = ModelWrapper(self, dataset, sentence_id_to_idx)
-        dependencies = minibatch_parse(sentences, model, eval_batch_size)
+        dependencies = mini_batch_parse(sentences, model, eval_batch_size)
 
         UAS = all_tokens = 0.0
         with tqdm(total=len(dataset)) as prog:
@@ -332,12 +332,12 @@ def punct(language, pos):
         raise ValueError('language: %s is not supported.' % language)
 
 
-def minibatches(data, batch_size):
+def mini_batches(data, batch_size):
     x = np.array([d[0] for d in data])
     y = np.array([d[2] for d in data])
     one_hot = np.zeros((y.size, 3))
     one_hot[np.arange(y.size), y] = 1
-    return get_minibatches([x, one_hot], batch_size)
+    return get_mini_batches([x, one_hot], batch_size)
 
 
 def load_and_preprocess_data(reduced=True):
@@ -345,12 +345,9 @@ def load_and_preprocess_data(reduced=True):
 
     print("Loading data...", )
     start = time.time()
-    train_set = read_conll(os.path.join(config.data_path, config.train_file),
-                           lowercase=config.lowercase)
-    dev_set = read_conll(os.path.join(config.data_path, config.dev_file),
-                         lowercase=config.lowercase)
-    test_set = read_conll(os.path.join(config.data_path, config.test_file),
-                          lowercase=config.lowercase)
+    train_set = read_conll(os.path.join(config.data_path, config.train_file), lowercase=config.lowercase)
+    dev_set = read_conll(os.path.join(config.data_path, config.dev_file), lowercase=config.lowercase)
+    test_set = read_conll(os.path.join(config.data_path, config.test_file), lowercase=config.lowercase)
     if reduced:
         train_set = train_set[:1000]
         dev_set = dev_set[:500]
@@ -394,8 +391,6 @@ def load_and_preprocess_data(reduced=True):
 
 
 class AverageMeter(object):
-    """Computes and stores the average and current value"""
-
     def __init__(self):
         self.reset()
 

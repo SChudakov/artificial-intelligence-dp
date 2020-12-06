@@ -3,16 +3,13 @@
 
 from datetime import datetime
 import os
-import pickle
 import math
 import time
-
-from torch import nn, optim
 import torch
-from tqdm import tqdm
 
+from tqdm import tqdm
 from parser_model import ParserModel
-from utils.parser_utils import minibatches, load_and_preprocess_data, AverageMeter
+from utils.parser_utils import mini_batches, load_and_preprocess_data, AverageMeter
 
 
 def train(parser, train_data, dev_data, output_path, batch_size=1024, n_epochs=10, lr=0.0005):
@@ -37,7 +34,7 @@ def train_for_epoch(parser, train_data, dev_data, optimizer, loss_func, batch_si
     loss_meter = AverageMeter()
 
     with tqdm(total=n_mini_batches) as prog:
-        for i, (train_x, train_y) in enumerate(minibatches(train_data, batch_size)):
+        for i, (train_x, train_y) in enumerate(mini_batches(train_data, batch_size)):
             optimizer.zero_grad()
             train_x = torch.from_numpy(train_x).long()
             train_y = torch.from_numpy(train_y.nonzero()[1]).long()
@@ -59,27 +56,27 @@ def train_for_epoch(parser, train_data, dev_data, optimizer, loss_func, batch_si
     return dev_UAS
 
 
+debug = True
+# debug = False
+parser, embeddings, train_data, dev_data, test_data = load_and_preprocess_data(debug)
+output_dir = "results/{:%Y%m%d_%H%M%S}/".format(datetime.now())
+output_path = output_dir + "model.weights"
+
+print(80 * "=")
+print("INITIALIZING")
+print(80 * "=")
+
+start = time.time()
+model = ParserModel(embeddings)
+parser.model = model
+print("took {:.2f} seconds\n".format(time.time() - start))
+
 if __name__ == "__main__":
-    # debug = True
-    debug = False
-
     # assert (torch.__version__ == "1.0.0"), "Please install torch version 1.0.0"
-
-    print(80 * "=")
-    print("INITIALIZING")
-    print(80 * "=")
-    parser, embeddings, train_data, dev_data, test_data = load_and_preprocess_data(debug)
-
-    start = time.time()
-    model = ParserModel(embeddings)
-    parser.model = model
-    print("took {:.2f} seconds\n".format(time.time() - start))
 
     print(80 * "=")
     print("TRAINING")
     print(80 * "=")
-    output_dir = "results/{:%Y%m%d_%H%M%S}/".format(datetime.now())
-    output_path = output_dir + "model.weights"
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -92,7 +89,7 @@ if __name__ == "__main__":
         print(80 * "=")
         print("Restoring the best model weights found on the dev set")
         parser.model.load_state_dict(torch.load(output_path))
-        print("Final evaluation on test set", )
+        print("Final evaluation on test set")
         parser.model.eval()
         UAS, dependencies = parser.parse(test_data)
         print("- test UAS: {:.2f}".format(UAS * 100.0))

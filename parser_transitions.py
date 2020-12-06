@@ -11,7 +11,6 @@ class PartialParse(object):
         self.dependencies = list()
 
     def parse_step(self, transition):
-
         if transition == 'S':
             self.stack.append(self.buffer.pop(0))
         elif transition == 'LA':
@@ -25,7 +24,7 @@ class PartialParse(object):
         return self.dependencies
 
 
-def minibatch_parse(sentences, model, batch_size):
+def mini_batch_parse(sentences, model, batch_size):
     partial_parses = [PartialParse(s) for s in sentences]
     unfinished_parses = partial_parses[:]  # shallow copy
 
@@ -67,9 +66,6 @@ def test_parse_step():
 
 
 def test_parse():
-    """Simple tests for the PartialParse.parse function
-    Warning: these are not exhaustive
-    """
     sentence = ["parse", "this", "sentence"]
     dependencies = PartialParse(sentence).parse(["S", "S", "S", "LA", "RA", "RA"])
     dependencies = tuple(sorted(dependencies))
@@ -93,12 +89,12 @@ def test_dependencies(name, deps, ex_deps):
         "{:} test resulted in dependency list {:}, expected {:}".format(name, deps, ex_deps)
 
 
-def test_minibatch_parse():
+def test_mini_batch_parse():
     sentences = [["right", "arcs", "only"],
                  ["right", "arcs", "only", "again"],
                  ["left", "arcs", "only"],
                  ["left", "arcs", "only", "again"]]
-    deps = minibatch_parse(sentences, DummyModel(), 2)
+    deps = mini_batch_parse(sentences, DummyModel(), 2)
     test_dependencies("minibatch_parse", deps[0],
                       (('ROOT', 'right'), ('arcs', 'only'), ('right', 'arcs')))
     test_dependencies("minibatch_parse", deps[1],
@@ -119,7 +115,7 @@ if __name__ == '__main__':
         test_parse_step()
         test_parse()
     elif args[1] == "part_d":
-        test_minibatch_parse()
+        test_mini_batch_parse()
     else:
         raise Exception(
             "You did not provide a valid keyword. Either provide 'part_c' or 'part_d', when executing this script")

@@ -1,16 +1,9 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-CS224N 2018-19: Homework 3
-parser_utils.py: Utilities for training the dependency parser.
-Sahil Chopra <schopra8@stanford.edu>
-"""
-
 import time
 import os
 import logging
 from collections import Counter
-from . general_utils import get_minibatches
+from .general_utils import get_minibatches
 from parser_transitions import minibatch_parse
 
 from tqdm import tqdm
@@ -44,7 +37,7 @@ class Parser(object):
 
     def __init__(self, dataset):
         root_labels = list([l for ex in dataset
-                           for (h, l) in zip(ex['head'], ex['label']) if h == 0])
+                            for (h, l) in zip(ex['head'], ex['label']) if h == 0])
         counter = Counter(root_labels)
         if len(counter) > 1:
             logging.info('Warning: more than one root label')
@@ -76,14 +69,14 @@ class Parser(object):
 
         # logging.info('Build dictionary for part-of-speech tags.')
         tok2id.update(build_dict([P_PREFIX + w for ex in dataset for w in ex['pos']],
-                                  offset=len(tok2id)))
+                                 offset=len(tok2id)))
         tok2id[P_PREFIX + UNK] = self.P_UNK = len(tok2id)
         tok2id[P_PREFIX + NULL] = self.P_NULL = len(tok2id)
         tok2id[P_PREFIX + ROOT] = self.P_ROOT = len(tok2id)
 
         # logging.info('Build dictionary for words.')
         tok2id.update(build_dict([w for ex in dataset for w in ex['word']],
-                                  offset=len(tok2id)))
+                                 offset=len(tok2id)))
         tok2id[UNK] = self.UNK = len(tok2id)
         tok2id[NULL] = self.NULL = len(tok2id)
         tok2id[ROOT] = self.ROOT = len(tok2id)
@@ -129,7 +122,7 @@ class Parser(object):
 
         for i in range(2):
             if i < len(stack):
-                k = stack[-i-1]
+                k = stack[-i - 1]
                 lc = get_lc(k)
                 rc = get_rc(k)
                 llc = get_lc(lc[0]) if len(lc) > 0 else []
@@ -183,7 +176,7 @@ class Parser(object):
             if (i1 > 0) and (h1 == i0):
                 return 0
             elif (i1 >= 0) and (h0 == i1) and \
-                 (not any([x for x in buf if ex['head'][x] == i0])):
+                    (not any([x for x in buf if ex['head'][x] == i0])):
                 return 1
             else:
                 return None if len(buf) == 0 else 2
@@ -191,7 +184,7 @@ class Parser(object):
             if (i1 > 0) and (h1 == i0):
                 return l1 if (l1 >= 0) and (l1 < self.n_deprel) else None
             elif (i1 >= 0) and (h0 == i1) and \
-                 (not any([x for x in buf if ex['head'][x] == i0])):
+                    (not any([x for x in buf if ex['head'][x] == i0])):
                 return l0 + self.n_deprel if (l0 >= 0) and (l0 < self.n_deprel) else None
             else:
                 return None if len(buf) == 0 else self.n_trans - 1
@@ -256,11 +249,11 @@ class Parser(object):
                     head[t] = h
                 for pred_h, gold_h, gold_l, pos in \
                         zip(head[1:], ex['head'][1:], ex['label'][1:], ex['pos'][1:]):
-                        assert self.id2tok[pos].startswith(P_PREFIX)
-                        pos_str = self.id2tok[pos][len(P_PREFIX):]
-                        if (self.with_punct) or (not punct(self.language, pos_str)):
-                            UAS += 1 if pred_h == gold_h else 0
-                            all_tokens += 1
+                    assert self.id2tok[pos].startswith(P_PREFIX)
+                    pos_str = self.id2tok[pos][len(P_PREFIX):]
+                    if (self.with_punct) or (not punct(self.language, pos_str)):
+                        UAS += 1 if pred_h == gold_h else 0
+                        all_tokens += 1
                 prog.update(i + 1)
         UAS /= all_tokens
         return UAS, dependencies
@@ -350,7 +343,7 @@ def minibatches(data, batch_size):
 def load_and_preprocess_data(reduced=True):
     config = Config()
 
-    print("Loading data...",)
+    print("Loading data...", )
     start = time.time()
     train_set = read_conll(os.path.join(config.data_path, config.train_file),
                            lowercase=config.lowercase)
@@ -364,12 +357,12 @@ def load_and_preprocess_data(reduced=True):
         test_set = test_set[:500]
     print("took {:.2f} seconds".format(time.time() - start))
 
-    print("Building parser...",)
+    print("Building parser...", )
     start = time.time()
     parser = Parser(train_set)
     print("took {:.2f} seconds".format(time.time() - start))
 
-    print("Loading pretrained embeddings...",)
+    print("Loading pretrained embeddings...", )
     start = time.time()
     word_vectors = {}
     for line in open(config.embedding_file).readlines():
@@ -385,14 +378,14 @@ def load_and_preprocess_data(reduced=True):
             embeddings_matrix[i] = word_vectors[token.lower()]
     print("took {:.2f} seconds".format(time.time() - start))
 
-    print("Vectorizing data...",)
+    print("Vectorizing data...", )
     start = time.time()
     train_set = parser.vectorize(train_set)
     dev_set = parser.vectorize(dev_set)
     test_set = parser.vectorize(test_set)
     print("took {:.2f} seconds".format(time.time() - start))
 
-    print("Preprocessing training data...",)
+    print("Preprocessing training data...", )
     start = time.time()
     train_examples = parser.create_instances(train_set)
     print("took {:.2f} seconds".format(time.time() - start))
@@ -402,6 +395,7 @@ def load_and_preprocess_data(reduced=True):
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
+
     def __init__(self):
         self.reset()
 

@@ -13,6 +13,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+
 class ParserModel(nn.Module):
     """ Feedforward neural network with an embedding layer and single hidden layer.
     The ParserModel will predict which transition should be applied to a
@@ -30,8 +31,8 @@ class ParserModel(nn.Module):
             in other ParserModel methods.
         - For further documentation on "nn.Module" please see https://pytorch.org/docs/stable/nn.html.
     """
-    def __init__(self, embeddings, n_features=36,
-        hidden_size=200, n_classes=3, dropout_prob=0.5):
+
+    def __init__(self, embeddings, n_features=36, hidden_size=200, n_classes=3, dropout_prob=0.5):
         """ Initialize the parser model.
 
         @param embeddings (Tensor): word embeddings (num_words, embedding_size)
@@ -71,8 +72,11 @@ class ParserModel(nn.Module):
         ###     Linear Layer: https://pytorch.org/docs/stable/nn.html#torch.nn.Linear
         ###     Xavier Init: https://pytorch.org/docs/stable/nn.html#torch.nn.init.xavier_uniform_
         ###     Dropout: https://pytorch.org/docs/stable/nn.html#torch.nn.Dropout
-
-
+        self.embed_to_hidden = nn.Linear(self.n_features * self.embed_size, self.hidden_size, bias=True)
+        nn.init.xavier_uniform_(self.embed_to_hidden.weight)
+        self.hidden_to_logits = nn.Linear(self.hidden_size, self.n_classes, bias=True)
+        nn.init.xavier_uniform_(self.embed_to_hidden.weight)
+        self.dropout = nn.Dropout(p=dropout_prob)
         ### END YOUR CODE
 
     def embedding_lookup(self, t):
@@ -103,11 +107,9 @@ class ParserModel(nn.Module):
         ###  Please see the following docs for support:
         ###     Embedding Layer: https://pytorch.org/docs/stable/nn.html#torch.nn.Embedding
         ###     View: https://pytorch.org/docs/stable/tensors.html#torch.Tensor.view
-
-
+        x = self.pretrained_embeddings(t).view(t.shape[0], -1)
         ### END YOUR CODE
         return x
-
 
     def forward(self, t):
         """ Run the model forward.
@@ -141,7 +143,8 @@ class ParserModel(nn.Module):
         ###
         ### Please see the following docs for support:
         ###     ReLU: https://pytorch.org/docs/stable/nn.html?highlight=relu#torch.nn.functional.relu
-
-
+        embeddings = self.embedding_lookup(t)
+        h = F.relu(self.embed_to_hidden(embeddings))
+        logits = self.hidden_to_logits(self.dropout(h))
         ### END YOUR CODE
         return logits

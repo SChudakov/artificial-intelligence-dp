@@ -4,3 +4,4 @@ venv
 *.pdf
 collect_submission.sh
 **/__pycache__/**
+results
